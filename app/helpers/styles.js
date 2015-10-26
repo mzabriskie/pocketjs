@@ -45,7 +45,6 @@ module.exports = StyleSheet.create({
     backgroundColor: 'transparent',
     border: '0 none',
     outline: 'none',
-    marginTop: -1,
     marginLeft: -1,
   }),
 });
