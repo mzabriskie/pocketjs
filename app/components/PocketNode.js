@@ -63,6 +63,7 @@ module.exports = React.createClass({
             ref="textInput"
             autoFocus={true}
             autoCorrect={false}
+            autoCapitalize={false}
             defaultValue=""
             value={this.state.inputValue}
             style={styles.input}
