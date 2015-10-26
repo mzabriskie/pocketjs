@@ -1,3 +1,3 @@
 # pocket-node
 
-Node REPL in the browser
+Node REPL in your mobile browser
