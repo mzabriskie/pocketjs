@@ -19,9 +19,15 @@ module.exports = React.createClass({
       }
     };
 
+    // Install Web Worker if supported
     if (window.Worker) {
       this.worker = new Worker('worker.js');
       this.worker.onmessage = this.handleWorkerMessage;
+    }
+
+    // Register Service Worker if supported
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', {scope: './'});
     }
   },
 
