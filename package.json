@@ -11,6 +11,7 @@
   "author": "Matt Zabriskie",
   "license": "MIT",
   "dependencies": {
+    "lodash.assign": "^3.2.0",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",
     "react-style": "^0.5.5"
