@@ -30,7 +30,7 @@ module.exports = React.createClass({
 
     // Install Web Worker if supported
     if (window.Worker) {
-      this.worker = null;//new Worker('worker.js');
+      this.worker = new Worker('worker.js');
       this.worker.onmessage = this.handleWorkerMessage;
     }
 
