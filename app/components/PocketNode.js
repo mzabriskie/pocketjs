@@ -27,11 +27,27 @@ module.exports = React.createClass({
 
     //listen for up/down arrows for history
     document.addEventListener("keydown",this.handleKeyDown);
+
+    // Install Web Worker if supported
+    if (window.Worker) {
+      this.worker = null;//new Worker('worker.js');
+      this.worker.onmessage = this.handleWorkerMessage;
+    }
+
+    // Register Service Worker if supported
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', {scope: './'});
+    }
+
   },
 
   componentWillUnmount: function () {
     document.onmouseup = null;
+
     document.removeEventListener('keydown',this.handleKeyDown);
+
+    this.worker.onmessage = null;
+    this.worker = null;
   },
 
   handleKeyDown:function(e) {
@@ -57,9 +73,25 @@ module.exports = React.createClass({
       return;
     }
 
-    var io = this.state.io;
     var code = e.target.value.trim();
-    var result = evaluate(code);
+
+    // Use Web Worker to handle evaluation if possible
+    if (this.worker) {
+      this.worker.postMessage(code);
+    } else {
+      this.handleWorkerMessage({
+        data: {
+          code: code,
+          result: evaluate(code),
+        }
+      });
+    }
+  },
+
+  handleWorkerMessage: function (e) {
+    var io = this.state.io;
+    var code = e.data.code;
+    var result = e.data.result;
 
     // Add input/output to state
     let input  = { id: io.length, type: 'in', value: code };
