@@ -18,10 +18,17 @@ module.exports = React.createClass({
         this.refs.textInput.focus();
       }
     };
+
+    if (window.Worker) {
+      this.worker = new Worker('worker.js');
+      this.worker.onmessage = this.handleWorkerMessage;
+    }
   },
 
   componentWillUnmount: function () {
     document.onmouseup = null;
+    this.worker.onmessage = null;
+    this.worker = null;
   },
 
   handleInputKeyUp: function (e) {
@@ -29,9 +36,25 @@ module.exports = React.createClass({
       return;
     }
 
-    var io = this.state.io;
     var code = e.target.value.trim();
-    var result = evaluate(code);
+
+    // Use Web Worker to handle evaluation if possible
+    if (this.worker) {
+      this.worker.postMessage(code);
+    } else {
+      this.handleWorkerMessage({
+        data: {
+          code: code,
+          result: evaluate(code),
+        }
+      });
+    }
+  },
+
+  handleWorkerMessage: function (e) {
+    var io = this.state.io;
+    var code = e.data.code;
+    var result = e.data.result;
 
     // Add input/output to state
     io.push({ id: io.length, type: 'in', value: code });
