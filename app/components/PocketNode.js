@@ -42,15 +42,16 @@ module.exports = React.createClass({
       // Return defaultValue, and set focus
       this.setState({ inputValue: null }, () => {
         setTimeout(() => {
-          this.refs.textInput.focus();          
+          this.refs.textInput.focus();
         }, 100);
       });
-      
+
       // Keep scrolling to the bottom
-      document.body.scrollTop = document.body.scrollHeight;
+      var element = document.getElementById("container");
+      element.scrollTop = element.offsetHeight;
     });
   },
-  
+
   render: function () {
     return (
       <div
