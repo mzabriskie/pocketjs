@@ -17,6 +17,7 @@ if [ "$BRANCH" == "gh-pages" ]; then
   git checkout master
 fi
 git branch -D gh-pages
+git push origin :gh-pages
 
 # build project
 npm run build
@@ -24,21 +25,21 @@ npm run build
 # remove superfluous files
 rm README.md
 rm -rf app/
-rm -rf node_modules/
 rm -rf scripts/
 rm package.json
 rm webpack.config.js
+mv node_modules/ /tmp
 
 # move built files
 mv build/* ./
+rm -rf build/
 
 # create gh-pages branch
 git checkout -b gh-pages
-git rm -rf .
 git add .
 git commit -m"releasing update"
 git push -f origin gh-pages
 git checkout $BRANCH
 
 # restore node modules
-npm install
+mv /tmp/node_modules/ ./
