@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# make sure working directory is clean
+DIRTY=$(git status | grep modified -c)
+let DIRTY+=$(git status | grep Untracked -c)
+
+if [ $DIRTY -gt 0 ] && [ "$1" != "-f" ]; then
+  echo "\033[0;31m"Refusing to operate on unclean working directory"\033[0m"
+  echo Use \"git status\" to see which files have been modified
+  exit 1
+fi
+
+# delete gh-pages branch
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$BRANCH" == "gh-pages" ]; then
+  git checkout master
+fi
+git branch -D gh-pages
+
+# build project
+npm run build
+
+# remove superfluous files
+rm README.md
+rm -rf app/
+rm -rf node_modules/
+rm -rf scripts/
+rm package.json
+rm webpack.config.js
+
+# move built files
+mv build/* ./
+
+# create gh-pages branch
+git checkout -b gh-pages
+git rm -rf .
+git add .
+git commit -m"releasing update"
+git push -f origin gh-pages
+git checkout $BRANCH
+
+# restore node modules
+npm install
