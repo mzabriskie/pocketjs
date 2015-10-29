@@ -52,18 +52,26 @@ module.exports = React.createClass({
     this.worker = null;
   },
 
+  showPreviousHistory(){
+    const newIdx = this.state.selectedHistoryItem !== null
+        ? Math.max(this.state.selectedHistoryItem - 2, 0)
+        : this.state.io.length -2;
+    this.setState({inputValue:this.state.io[newIdx].value,selectedHistoryItem:newIdx});
+  },
+  showNextHistory(){
+    const newIdx = Math.min(this.state.selectedHistoryItem+2,this.state.io.length-2);
+    this.setState({inputValue:this.state.io[newIdx].value,selectedHistoryItem:newIdx});
+  },
+  resetHistoryState(){
+    this.setState({selectedHistoryItem:null});
+  },
   handleKeyDown:function(e) {
-      let newIdx;
       switch(e.keyCode) {
           case(38):
-              newIdx = this.state.selectedHistoryItem !== null
-                  ? Math.max(this.state.selectedHistoryItem - 2, 0)
-                  : this.state.io.length -2;
-              this.setState({inputValue:this.state.io[newIdx].value,selectedHistoryItem:newIdx});
+              this.showPreviousHistory();
               break;
           case(40):
-              newIdx = Math.min(this.state.selectedHistoryItem+2,this.state.io.length-2);
-              this.setState({inputValue:this.state.io[newIdx].value,selectedHistoryItem:newIdx});
+              this.showNextHistory();
               break;
       }
   },
@@ -74,6 +82,9 @@ module.exports = React.createClass({
     if (e.keyCode !== 13) {
       return;
     }
+
+    //reset the history state
+    this.resetHistoryState();
 
     let code = e.target.value.trim();
     let transformed = null;
