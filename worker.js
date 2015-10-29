@@ -2,7 +2,8 @@
 // TODO: Find a way to share this logic with ./app/helpers/evaluate.js
 onmessage = function(e) {
   var wrap = false;
-  var code = e.data;
+  var code = e.data.transformed;
+  var error;
   var result;
 
   // Need to wrap object literals, otherwise they are expressed as a block
@@ -16,12 +17,13 @@ onmessage = function(e) {
   try {
     result = eval.call(null, (wrap ? '(' : '') + code + (wrap ? ')' : ''));
   } catch (x) {
-    result = x;
+    error = x.message;
   }
 
   postMessage({
-    code: code,
-    result: result,
+    code: e.data.code,
+    error,
+    result,
   });
 }
 
