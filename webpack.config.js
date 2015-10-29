@@ -14,6 +14,9 @@ module.exports = {
     filename: 'bundle.js'
   },
   module: {
+    noParse: [
+      /\/babel-core\//
+    ],
     loaders: [
       {
         test: /\.js$/,

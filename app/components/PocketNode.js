@@ -1,3 +1,5 @@
+require('babel-core/browser-polyfill');
+var babel = require('babel-core/browser');
 var React = require('react');
 var Item = require('./Item');
 var evaluate = require('../helpers/evaluate');
@@ -42,25 +44,49 @@ module.exports = React.createClass({
       return;
     }
 
-    var code = e.target.value.trim();
+    let code = e.target.value.trim();
+    let transformed = null;
 
+    // Transform code to something the browser understands
+    try {
+      transformed = babel.transform(code).code;
+    } catch (e) {
+      this.handleWorkerMessage({
+        data: {
+          code: code,
+          error: e
+        }
+      });
+      return;
+    }
+        
     // Use Web Worker to handle evaluation if possible
     if (this.worker) {
-      this.worker.postMessage(code);
+      this.worker.postMessage({
+        code: code,
+        transformed: transformed
+      });
     } else {
       this.handleWorkerMessage({
         data: {
           code: code,
-          result: evaluate(code),
+          result: evaluate(transformed),
         }
       });
     }
   },
 
   handleWorkerMessage: function (e) {
-    var io = this.state.io;
-    var code = e.data.code;
-    var result = e.data.result;
+    let { io } = this.state;
+    let {
+      code,
+      error,
+      result
+    } = e.data;
+    
+    if (error) {
+      result = error instanceof Error ? error : new Error(error);
+    }
 
     // Add input/output to state
     io.push({ id: io.length, type: 'in', value: code });
@@ -76,7 +102,7 @@ module.exports = React.createClass({
       });
 
       // Keep scrolling to the bottom
-      var element = document.getElementById("container");
+      let element = document.getElementById("container");
       element.scrollTop = element.offsetHeight;
     });
   },
