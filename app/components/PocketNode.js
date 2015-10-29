@@ -80,7 +80,7 @@ module.exports = React.createClass({
 
     // Transform code to something the browser understands
     try {
-      transformed = babel.transform(code).code;
+      transformed = babel.transform(code,{ blacklist: ["strict"] }).code;
     } catch (e) {
       this.handleWorkerMessage({
         data: {
