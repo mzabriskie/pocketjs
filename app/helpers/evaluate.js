@@ -12,6 +12,7 @@ module.exports = function evaluate(code) {
 
   // Evaluate code that was entered
   try {
+    code = code.replace(/("|')use strict("|');\n\n/, '');
     result = eval.call(null, (wrap ? '(' : '') + code + (wrap ? ')' : ''));
   } catch (x) {
     result = x;
