@@ -4,13 +4,19 @@ var React = require('react');
 var Item = require('./Item');
 var evaluate = require('../helpers/evaluate');
 var styles = require('../helpers/styles');
+var History = require('../helpers/history');
 
 module.exports = React.createClass({
   getInitialState: function () {
-    return {
-      io: [],
+    this.history = new History();
+    var state = {
+      io: this.history.getFullHistory(),
       inputValue: null,
+      historyEnabled:true,
+      selectedHistoryItem:null
     };
+
+    return state;
   },
 
   componentDidMount: function () {
@@ -20,6 +26,9 @@ module.exports = React.createClass({
         this.refs.textInput.focus();
       }
     };
+
+    //listen for up/down arrows for history
+    document.addEventListener("keydown",this.handleKeyDown);
 
     // Install Web Worker if supported
     if (window.Worker) {
@@ -31,25 +40,58 @@ module.exports = React.createClass({
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', {scope: './'});
     }
+
   },
 
   componentWillUnmount: function () {
     document.onmouseup = null;
+
+    document.removeEventListener('keydown',this.handleKeyDown);
+
     this.worker.onmessage = null;
     this.worker = null;
   },
 
+  showPreviousHistory(){
+    const newIdx = this.state.selectedHistoryItem !== null
+        ? Math.max(this.state.selectedHistoryItem - 2, 0)
+        : this.state.io.length -2;
+    this.setState({inputValue:this.state.io[newIdx].value,selectedHistoryItem:newIdx});
+  },
+  showNextHistory(){
+    const newIdx = Math.min(this.state.selectedHistoryItem+2,this.state.io.length-2);
+    this.setState({inputValue:this.state.io[newIdx].value,selectedHistoryItem:newIdx});
+  },
+  resetHistoryState(){
+    this.setState({selectedHistoryItem:null});
+  },
+  handleKeyDown:function(e) {
+      switch(e.keyCode) {
+          case(38):
+              this.showPreviousHistory();
+              break;
+          case(40):
+              this.showNextHistory();
+              break;
+      }
+  },
+  handleInputChange(e){
+      this.setState({inputValue:e.target.value});
+  },
   handleInputKeyUp: function (e) {
     if (e.keyCode !== 13) {
       return;
     }
+
+    //reset the history state
+    this.resetHistoryState();
 
     let code = e.target.value.trim();
     let transformed = null;
 
     // Transform code to something the browser understands
     try {
-      transformed = babel.transform(code).code;
+      transformed = babel.transform(code,{ blacklist: ["strict"] }).code;
     } catch (e) {
       this.handleWorkerMessage({
         data: {
@@ -89,8 +131,17 @@ module.exports = React.createClass({
     }
 
     // Add input/output to state
-    io.push({ id: io.length, type: 'in', value: code });
-    io.push({ id: io.length, type: 'out', value: result });
+    let input  = { id: io.length, type: 'in', value: code };
+    io.push(input);
+    let output = { id: io.length, type: 'out', value: result };
+    io.push(output);
+
+    //if history enabled, store the input and output
+    if (this.state.historyEnabled) {
+        this.history.store(input);
+        this.history.store(output);
+    }
+
 
     // Re-render, and clear input
     this.setState({ io, inputValue: ' ' }, () => {
@@ -122,6 +173,7 @@ module.exports = React.createClass({
             autoComplete="off"
             autoCapitalize="off"
             defaultValue=""
+            onChange={this.handleInputChange}
             value={this.state.inputValue}
             style={styles.input}
             onKeyUp={this.handleInputKeyUp}
